@@ -94,7 +94,7 @@
      }'>Hombre Araña<small>POST a OK.ru</small></a>
 
   <!-- Alternativa con link común (GET), sin POST -->
-  <a class="tile" href="https://ok.ru/search?st.mode=Movie&st.query=hombre+ara%C3%B1a">Hombre Araña<small>búsqueda GET</small></a>
+  <a class="tile" href="https://ok.ru/video/search?st.mode=Movie&st.query=hombre+ara%C3%B1a">Hombre Araña<small>búsqueda GET</small></a>
 </div>
 
 <h2>Noticias</h2>
@@ -111,11 +111,26 @@
 
 <script>
 (function () {
+  // true = los links y los POST se abren en una pestaña nueva
+  // false = se abren en la misma pestaña
+  var ABRIR_EN_PESTANA_NUEVA = true;
+
+  if (ABRIR_EN_PESTANA_NUEVA) {
+    var links = document.querySelectorAll('a.tile');
+    for (var i = 0; i < links.length; i++) {
+      if (links[i].getAttribute('href') !== '#') {
+        links[i].setAttribute('target', '_blank');
+        links[i].setAttribute('rel', 'noopener');
+      }
+    }
+  }
+
   // ---- POST con navegación: arma un formulario oculto y lo envía ----
   function enviarPostNavegando(url, datos) {
     var form = document.createElement('form');
     form.method = 'POST';
     form.action = url;
+    form.target = ABRIR_EN_PESTANA_NUEVA ? '_blank' : '_self';
     form.style.display = 'none';
     for (var clave in datos) {
       if (!datos.hasOwnProperty(clave)) continue;
