@@ -44,6 +44,18 @@
     -webkit-transform: scale(1.08); transform: scale(1.08);
   }
   .tile:focus small, .tile:hover small { color: #dbe6ff; }
+
+  #aviso {
+    position: fixed; left: 50%; bottom: 40px;
+    -webkit-transform: translateX(-50%); transform: translateX(-50%);
+    padding: 18px 36px; border-radius: 12px;
+    background: #222; color: #fff; font-size: 30px;
+    opacity: 0; -webkit-transition: opacity .3s; transition: opacity .3s;
+    pointer-events: none;
+  }
+  #aviso.ok { background: #1f9d55; }
+  #aviso.error { background: #c0392b; }
+  #aviso.visible { opacity: 1; }
 </style>
 </head>
 <body>
@@ -60,8 +72,16 @@
 
 <h2>Videos</h2>
 <div class="grid">
-  <a class="tile" href="https://www.youtube.com/tv">YouTube<small>youtube.com/tv</small></a>
+  <a class="tile" href="https://www.ok.ru/video/showcase">OK.ru<small>videos</small></a>
   <a class="tile" href="https://www.twitch.tv">Twitch<small>twitch.tv</small></a>
+</div>
+
+<h2>Youtube Canales</h2>
+<div class="grid">
+ <a class="tile" href="https://www.youtube.com/@NicoGuthmann">Nico<small>Tuguito</small></a>
+  <a class="tile" href="https://www.youtube.com/@SomosGelatina">Gelatina<small>Gelatina</small></a>
+  <a class="tile" href="https://www.youtube.com/@Radioconvos89.9">Radio Con vos<small>Radio con Vos</small></a>
+ <a class="tile" href="https://www.youtube.com/@Futurock">Futurock<small>Futu</small></a>
 </div>
 
 <h2>Noticias</h2>
@@ -76,8 +96,64 @@
   <a class="tile" href="https://www.wikipedia.org">Wikipedia<small>wikipedia.org</small></a>
 </div>
 
+<!-- ============================================================
+     BOTONES POST: usan data-post (URL) y data-body (JSON).
+     Para agregar otro, copiá la línea y cambiá esos dos valores.
+     ============================================================ -->
+<h2>Acciones</h2>
+<div class="grid">
+  <a class="tile" href="#"
+     data-post="https://otrositio.com/endpoint"
+     data-body='{"accion":"encender","dispositivo":"luz_living"}'>Encender luz<small>POST</small></a>
+  <a class="tile" href="#"
+     data-post="https://otrositio.com/endpoint"
+     data-body='{"accion":"apagar","dispositivo":"luz_living"}'>Apagar luz<small>POST</small></a>
+</div>
+
+<div id="aviso"></div>
+
 <script>
 (function () {
+  // ---- Aviso en pantalla ----
+  var aviso = document.getElementById('aviso');
+  var avisoTimer = null;
+  function mostrarAviso(texto, tipo) {
+    aviso.textContent = texto;
+    aviso.className = 'visible ' + (tipo || '');
+    clearTimeout(avisoTimer);
+    avisoTimer = setTimeout(function () { aviso.className = ''; }, 3000);
+  }
+
+  // ---- POST genérico: función que recibe la URL y el cuerpo ----
+  function enviarPost(url, datos, etiqueta) {
+    mostrarAviso('Enviando...');
+    fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(datos)
+    })
+    .then(function (r) {
+      if (r.ok) mostrarAviso(etiqueta + ': enviado', 'ok');
+      else mostrarAviso(etiqueta + ': error ' + r.status, 'error');
+    })
+    .catch(function () {
+      mostrarAviso(etiqueta + ': no se pudo enviar (red o CORS)', 'error');
+    });
+  }
+
+  // Todos los tiles con data-post usan la misma función
+  var botonesPost = document.querySelectorAll('.tile[data-post]');
+  for (var b = 0; b < botonesPost.length; b++) {
+    botonesPost[b].addEventListener('click', function (e) {
+      e.preventDefault();
+      var url = this.getAttribute('data-post');
+      var datos = {};
+      try { datos = JSON.parse(this.getAttribute('data-body') || '{}'); }
+      catch (err) { mostrarAviso('JSON inválido en data-body', 'error'); return; }
+      enviarPost(url, datos, this.firstChild.textContent);
+    });
+  }
+
   // ---- Reloj ----
   var reloj = document.getElementById('reloj');
   function pad(n) { return n < 10 ? '0' + n : '' + n; }
